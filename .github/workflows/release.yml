@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+          cache-read-only: true
+      - name: Verify version and build
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' build.gradle.kts)"
+          test "$RELEASE_TAG" = "v$version"
+          ./gradlew --no-daemon build
+      - name: Prepare checksums and build metadata
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import re
+
+          source = pathlib.Path('build.gradle.kts').read_text()
+          version = re.search(r'^version = "([^"]+)"', source, re.M).group(1)
+          paper_api = re.search(r'compileOnly\("io.papermc.paper:paper-api:([^"]+)"\)', source).group(1)
+          jar = pathlib.Path('build/libs') / f'overworld_travel-{version}.jar'
+          digest = hashlib.sha256(jar.read_bytes()).hexdigest()
+          jar.with_suffix('.jar.sha256').write_text(f'{digest}  {jar.name}\n')
+          metadata = {
+              'version': version,
+              'tag': os.environ['RELEASE_TAG'],
+              'commit': os.environ['GITHUB_SHA'],
+              'java': 25,
+              'paperApi': paper_api,
+              'artifact': {'name': jar.name, 'sha256': digest},
+          }
+          (jar.parent / 'release-metadata.json').write_text(
+              json.dumps(metadata, indent=2) + '\n'
+          )
+          PY
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag \
+              --title "Overworld Travel $RELEASE_TAG" --generate-notes
+          fi
+          gh release upload "$RELEASE_TAG" build/libs/*.jar \
+            build/libs/*.jar.sha256 build/libs/release-metadata.json --clobber

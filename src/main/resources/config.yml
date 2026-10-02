@@ -1,0 +1,25 @@
+# 시간 단위: 초. 설정을 바꾼 뒤 서버를 재시작하세요.
+tpa:
+  cooldown-seconds: 120
+  warmup-seconds: 5
+  request-expiry-seconds: 60
+  request-throttle-seconds: 3
+home:
+  cooldown-seconds: 300
+  warmup-seconds: 5
+  # respawn: 유효한 침대/리스폰 정박기, 없으면 아래 월드의 스폰
+  # world-spawn: 항상 아래 월드의 스폰
+  destination: respawn
+  # 비워두면 서버의 기본 월드를 사용합니다.
+  spawn-world: ''
+back:
+  cooldown-seconds: 300
+  warmup-seconds: 10
+safety:
+  # 시점 회전은 허용하고, 출발점에서 이 거리보다 움직이면 취소합니다.
+  movement-tolerance: 0.1
+  cancel-on-damage: true
+  cancel-on-attack: true
+  # 발/머리 공간, 바닥, 위험 블록, 월드 경계를 검사합니다.
+  check-destination: true
+  chunk-load-timeout-seconds: 15

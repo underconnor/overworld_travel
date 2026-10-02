@@ -1,0 +1,37 @@
+name: OverworldTravel
+version: '${version}'
+main: io.github.underconnor.overworld.travel.OverworldTravel
+api-version: '26.2'
+author: underconnor
+description: Overworld raid server travel with Passport real names
+website: https://github.com/underconnor/overworld_travel
+softdepend: [Passport]
+commands:
+  tpa:
+    description: 닉네임 또는 Passport 실명으로 이동을 요청합니다. 인수 없이 선택 화면을 엽니다.
+    usage: /tpa [닉네임 또는 실명]
+    permission: overworld.travel.tpa
+  tpaccept:
+    description: 받은 이동 요청을 수락합니다.
+    usage: /tpaccept [닉네임 또는 실명]
+    permission: overworld.travel.tpa
+  tpadeny:
+    description: 받은 이동 요청을 거절합니다.
+    usage: /tpadeny [닉네임 또는 실명]
+    permission: overworld.travel.tpa
+  tpacancel:
+    description: 보낸 요청이나 이동 대기를 취소합니다.
+    permission: overworld.travel.tpa
+  home:
+    description: 개인 리스폰 지점 또는 월드 스폰으로 이동합니다.
+    permission: overworld.travel.home
+  back:
+    description: 마지막 사망 지점으로 이동합니다.
+    permission: overworld.travel.back
+permissions:
+  overworld.travel.tpa:
+    default: true
+  overworld.travel.home:
+    default: true
+  overworld.travel.back:
+    default: true
